@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
+<title>身体记录</title>
+<style>
+:root{
+  color-scheme: light only;
+  --bg:#ecebe8;
+  --ink:#45413b;
+  --ink2:#766f65;
+  --y:#f5c542;
+  --y2:#e0a12f;
+  --yl:#f8edc8;
+  --p:#f4d3cf;
+  --p2:#e6aaa5;
+  --pk-ink:#9c514e;
+  --out:6px 6px 14px rgba(160,154,144,.38), -6px -6px 14px rgba(255,255,255,.95);
+  --out-s:3px 3px 8px rgba(160,154,144,.36), -3px -3px 8px rgba(255,255,255,.95);
+  --in:inset 3px 3px 7px rgba(160,154,144,.42), inset -3px -3px 7px rgba(255,255,255,.95);
+  --font:"PingFang SC","HarmonyOS Sans SC","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5}
+body{min-height:100vh}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--y2);outline-offset:2px}
+#app{max-width:480px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 18px 120px}
+.card{background:var(--bg);border-radius:24px;box-shadow:var(--out);padding:18px;margin-bottom:22px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px}
+.yr{font-size:13px;color:var(--ink2);letter-spacing:.08em}
+.mo{font-size:52px;font-weight:300;line-height:1;letter-spacing:-.02em}
+.mo small{font-size:18px;font-weight:400;margin-left:4px;color:var(--ink2)}
+.arrows{display:flex;gap:14px}
+.round{width:42px;height:42px;border-radius:50%;border:0;background:var(--bg);box-shadow:var(--out-s);display:grid;place-items:center;cursor:pointer}
+.round:active{box-shadow:var(--in)}
+.round svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+h1,h2,h3{margin:0;font-weight:500}
+.status{display:flex;gap:18px;align-items:center}
+.ring{flex:0 0 108px;width:108px;height:108px;position:relative}
+.ring svg{width:108px;height:108px;transform:rotate(-90deg)}
+.ring .in{position:absolute;inset:14px;border-radius:50%;box-shadow:var(--out-s);display:grid;place-items:center;text-align:center;background:var(--bg)}
+.ring .n{font-size:30px;font-weight:300;line-height:1}
+.ring .u{font-size:11px;color:var(--ink2);margin-top:2px}
+.stx{flex:1;min-width:0}
+.stx .k{font-size:12px;color:var(--ink2)}
+.stx .v{font-size:17px;font-weight:500;margin:1px 0 8px}
+.chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;background:var(--p);color:var(--pk-ink)}
+.chip.y{background:var(--yl);color:#7a5a12}
+.week{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;color:var(--ink2);margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.day{aspect-ratio:1;border:0;border-radius:14px;background:var(--bg);box-shadow:var(--out-s);position:relative;font-size:15px;cursor:pointer;display:grid;place-items:center;padding:0}
+.day span{transform:translateY(-2px)}
+.day .dot{position:absolute;bottom:6px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--y2)}
+.day.per{background:linear-gradient(145deg,#f9dedb,#f1c3be);color:#6e3533}
+.day.pred{background:var(--yl);box-shadow:none;outline:1.5px dashed var(--y2);outline-offset:-2px}
+.day.today{outline:2px solid var(--y);outline-offset:-2px;font-weight:600}
+.day.sel{box-shadow:var(--in)}
+.day.pred.today{outline-style:solid}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:var(--ink2);margin:-4px 4px 22px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:5px}
+.btn{width:100%;border:0;border-radius:999px;padding:15px;font-size:16px;font-weight:500;cursor:pointer;background:linear-gradient(145deg,#f9d96e,#f0b73c);color:#43350f;box-shadow:var(--out)}
+.btn:active{box-shadow:var(--in)}
+.btn.plain{background:var(--bg);color:var(--ink);box-shadow:var(--out-s)}
+.btn.small{padding:10px 16px;width:auto;font-size:14px}
+.link{border:0;background:none;color:var(--ink2);font-size:14px;text-decoration:underline;cursor:pointer;padding:8px}
+.banner{background:var(--yl);border-radius:16px;padding:12px 14px;font-size:13px;color:#6b5210;margin-bottom:22px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.banner button{border:0;background:none;color:#6b5210;font-weight:600;padding:4px 6px;cursor:pointer}
+nav{position:fixed;left:0;right:0;bottom:0;padding:10px 18px calc(env(safe-area-inset-bottom) + 12px);background:linear-gradient(to top,var(--bg) 70%,rgba(236,235,232,0));z-index:5}
+nav .bar{max-width:400px;margin:0 auto;display:flex;border-radius:999px;box-shadow:var(--out);background:var(--bg);padding:6px}
+nav button{flex:1;border:0;background:none;padding:9px 0;border-radius:999px;font-size:12px;color:var(--ink2);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:#43350f;background:linear-gradient(145deg,#f9d96e,#f0b73c);box-shadow:var(--out-s)}
+/* day sheet */
+#sheet{position:fixed;inset:0;background:var(--bg);z-index:20;overflow-y:auto;transform:translateY(100%);transition:transform .28s ease;visibility:hidden}
+#sheet.open{transform:none;visibility:visible}
+.shin{max-width:480px;margin:0 auto;padding:0 18px calc(env(safe-area-inset-bottom) + 50px)}
+.shhead{position:sticky;top:0;background:var(--bg);z-index:3;padding:calc(env(safe-area-inset-top) + 14px) 0 14px;display:flex;align-items:center;gap:14px}
+.shhead .t{font-size:24px;font-weight:300;line-height:1.15}
+.shhead .s{font-size:12px;color:var(--ink2)}
+.seg{display:flex;padding:5px;border-radius:999px;box-shadow:var(--in);margin-bottom:22px}
+.seg button{flex:1;border:0;background:none;padding:12px 0;border-radius:999px;font-size:15px;cursor:pointer;color:var(--ink2)}
+.seg button.on.pp{background:linear-gradient(145deg,#f9dedb,#eebab5);color:#6e3533;box-shadow:var(--out-s)}
+.seg button.on.np{background:linear-gradient(145deg,#f9d96e,#f0b73c);color:#43350f;box-shadow:var(--out-s)}
+.sec h3{font-size:14px;color:var(--ink2);margin-bottom:10px;font-weight:500}
+.sec.pk h3{color:var(--pk-ink)}
+.row{display:grid;grid-template-columns:76px 1fr;gap:10px;padding:9px 0;align-items:start}
+.row+.row{border-top:1px solid rgba(160,154,144,.18)}
+.lab{font-size:14px;padding-top:8px}
+.opts{display:flex;flex-wrap:wrap;gap:9px}
+.pill{border:0;background:var(--bg);font-size:14px;padding:7px 14px;min-height:36px;border-radius:999px;box-shadow:var(--out-s);cursor:pointer}
+.pill:active{box-shadow:var(--in)}
+.pill.on{background:linear-gradient(145deg,#f9d96e,#f0b73c);color:#43350f}
+.sec.pk .pill.on{background:linear-gradient(145deg,#f9dedb,#eebab5);color:#6e3533}
+.pill.pre{border:1.5px solid rgba(230,170,165,.7)}
+.pill.add{color:var(--ink2);padding:7px 13px}
+.pill.num{width:40px;padding:0;display:grid;place-items:center;border-radius:50%;height:40px}
+.field{width:100%;border:0;background:var(--bg);box-shadow:var(--in);border-radius:16px;padding:12px 14px;font:inherit;font-size:15px;color:var(--ink);outline:none}
+.field:focus{box-shadow:var(--in),0 0 0 2px var(--y)}
+textarea.field{min-height:110px;resize:vertical}
+.saved{font-size:12px;color:var(--ink2);text-align:center;margin-top:6px}
+.hint{font-size:12px;color:var(--ink2)}
+/* cycles */
+.stat2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.tile{border-radius:20px;box-shadow:var(--in);padding:14px;text-align:center}
+.tile .n{font-size:30px;font-weight:300;line-height:1.1}
+.tile .k{font-size:12px;color:var(--ink2)}
+.cyc{padding:10px 0}
+.cyc+.cyc{border-top:1px solid rgba(160,154,144,.18)}
+.cyc .h{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+.cyc .h span:last-child{color:var(--ink2)}
+.cbar{height:12px;border-radius:999px;box-shadow:var(--in);overflow:hidden;display:flex}
+.cbar i{display:block;height:100%}
+.cbar .a{background:linear-gradient(145deg,#f6cfca,#eaaea9)}
+.cbar .b{background:linear-gradient(145deg,#f9e3a0,#f2c451)}
+.mt{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.tr{display:grid;grid-template-columns:1fr auto auto;gap:12px;padding:9px 0;font-size:14px;align-items:center}
+.tr+.tr{border-top:1px solid rgba(160,154,144,.18)}
+.tr .m{color:var(--ink2);font-size:12px}
+.empty{text-align:center;color:var(--ink2);font-size:14px;padding:18px 6px}
+svg text{font-family:var(--font)}
+/* settings */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chipx{display:inline-flex;align-items:center;gap:6px;padding:6px 6px 6px 13px;border-radius:999px;box-shadow:var(--out-s);font-size:14px}
+.chipx button{border:0;width:22px;height:22px;border-radius:50%;background:var(--bg);box-shadow:var(--in);cursor:pointer;font-size:13px;line-height:1;color:var(--ink2);padding:0}
+.inl{display:flex;gap:10px;margin-bottom:6px}
+.inl .field{flex:1}
+.setrow{margin-bottom:16px}
+.setrow>.k{font-size:13px;color:var(--ink2);margin-bottom:8px}
+.pillrow{display:flex;gap:9px;flex-wrap:wrap}
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(80,74,66,.28);z-index:40;display:none;align-items:flex-end;justify-content:center;padding:18px}
+#modal.open{display:flex}
+.mbox{background:var(--bg);border-radius:28px;box-shadow:var(--out);width:100%;max-width:440px;padding:20px;max-height:86vh;overflow:auto;margin-bottom:calc(env(safe-area-inset-bottom) + 6px)}
+.mbox h3{font-size:17px;margin-bottom:12px}
+.mbox p{margin:0 0 14px;font-size:14px;color:var(--ink2)}
+.mbox .acts{display:flex;gap:12px;margin-top:14px}
+.mbox .acts .btn{padding:12px}
+.mbox textarea.field{min-height:180px;font-size:12px;font-family:ui-monospace,Menlo,monospace}
+@media (prefers-reduced-motion:reduce){#sheet{transition:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav><div class="bar" id="nav"></div></nav>
+<div id="sheet"><div class="shin" id="sheetBody"></div></div>
+<div id="modal"><div class="mbox" id="mbox"></div></div>
+
+<script>
+(function(){
+'use strict';
+/* ---------- 工具函数 ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);};
+const diff=(a,b)=>Math.round((parse(a)-parse(b))/86400000);
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return ymd(d);};
+const fmt=s=>{const d=parse(s);return (d.getMonth()+1)+'月'+d.getDate()+'日';};
+const WK=['日','一','二','三','四','五','六'];
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+const clone=o=>JSON.parse(JSON.stringify(o));
+const TODAY=ymd(new Date());
+
+/* ---------- 字段定义 ---------- */
+const LEVELS={
+  flow:{label:'经量',opts:['少','中','多'],base:1},
+  pain:{label:'痛经',opts:['无','轻','中','重'],base:0},
+  dq:{label:'分泌物量',opts:['无','少','中','多'],base:0},
+  energy:{label:'精力',opts:['低','中','高'],base:1},
+  sleep:{label:'睡眠',opts:['差','一般','好'],base:1},
+  appetite:{label:'胃口',opts:['差','正常','好'],base:1},
+  head:{label:'头痛',opts:['无','轻','中','重'],base:0},
+  breast:{label:'胸胀',opts:['无','轻','中','重'],base:0},
+  belly:{label:'小腹胀',opts:['无','轻','中','重'],base:0},
+  sport:{label:'运动',opts:['没动','轻','中','强'],base:0}
+};
+const LISTS={texture:'质地',color:'颜色',mood:'情绪',tags:'备注标签'};
+const DEF={
+  texture:['干燥','粘稠','乳霜状','蛋清拉丝','水样'],
+  color:['透明','乳白','淡黄','偏棕','偏红'],
+  mood:['平静','开心','满足','期待','放松','烦躁','焦虑','低落','委屈','疲惫','敏感','无聊'],
+  tags:['考试周','受伤','焦虑','熬夜','吵架','没吃饭','空腹太久','暴食','吃很少','冰饮','咖啡','骑车','爬山']
+};
+const COLS=[['date','日期'],['period','经期'],['flow','经量'],['pain','痛经'],['dq','分泌物量'],['texture','质地'],['color','颜色'],['mood','情绪'],['energy','精力'],['sleep','睡眠'],['appetite','胃口'],['head','头痛'],['breast','胸胀'],['belly','小腹胀'],['sport','运动'],['temp','基础体温'],['overall','总体状态'],['tags','备注标签'],['note','自由文字']];
+
+/* ---------- 状态与存储 ---------- */
+let S={records:{},settings:{opts:clone(DEF)},meta:{lastExport:null,bannerHidden:''}};
+let view='cal', vy=new Date().getFullYear(), vm=new Date().getMonth(), cur=null, metric='breast', storeOK=true, askCb=null, exportFmt='csv', exportRange='month';
+const KEY='body-log-v1';
+async function load(){
+  let raw=null;
+  try{const r=await window.storage.get(KEY);if(r&&r.value)raw=r.value;}catch(e){}
+  if(!raw){try{raw=window.localStorage.getItem(KEY);}catch(e){}}
+  if(raw){try{const d=JSON.parse(raw);S.records=d.records||{};S.settings=d.settings||S.settings;S.meta=Object.assign(S.meta,d.meta||{});}catch(e){}}
+  Object.keys(DEF).forEach(k=>{if(!S.settings.opts)S.settings.opts={};if(!Array.isArray(S.settings.opts[k]))S.settings.opts[k]=clone(DEF[k]);});
+}
+let saveT;
+function save(){
+  clearTimeout(saveT);
+  saveT=setTimeout(async()=>{
+    const data=JSON.stringify(S);let ok=false;
+    try{await window.storage.set(KEY,data);ok=true;}catch(e){}
+    try{window.localStorage.setItem(KEY,data);ok=true;}catch(e){}
+    storeOK=ok;
+    const el=$('#savedTip'); if(el)el.textContent=storeOK?'已自动保存':'当前无法保存到存储，请及时导出';
+  },250);
+}
+
+/* ---------- 周期计算 ---------- */
+function periods(){
+  const days=Object.keys(S.records).filter(d=>S.records[d].period===true).sort();
+  const out=[];let c=null;
+  days.forEach(d=>{
+    if(c&&diff(d,c.end)<=2){c.end=d;c.days.push(d);}
+    else{c={start:d,end:d,days:[d]};out.push(c);}
+  });
+  return out;
+}
+function analyze(){
+  const per=periods();
+  const cycles=per.map((p,i)=>{const n=per[i+1];return{start:p.start,end:p.end,days:p.days.length,len:n?diff(n.start,p.start):null};});
+  const lens=cycles.filter(c=>c.len&&c.len>=15&&c.len<=70).map(c=>c.len);
+  const recent=lens.slice(-3);
+  const avgLen=mean(recent);
+  const done=cycles.filter(c=>c.len);
+  const avgP=Math.round(mean(done.map(c=>c.days))||(cycles.length?cycles[cycles.length-1].days:5))||5;
+  let pred=null,msg='';
+  if(!per.length){msg='从记录第一天经期开始';}
+  else if(per.length<3){msg='再记 '+(3-per.length)+' 次经期开始就能预测';}
+  else if(recent.length<2){msg='周期长度差异较大，暂时无法预测';}
+  else{
+    const m=avgLen,sd=Math.sqrt(mean(recent.map(x=>(x-m)*(x-m))));
+    const margin=Math.min(5,Math.max(2,Math.round(sd)));
+    const next=addDays(per[per.length-1].start,Math.round(m));
+    pred={next,from:addDays(next,-margin),to:addDays(next,margin),set:new Set()};
+    for(let i=0;i<avgP;i++){const d=addDays(next,i);if(d>=TODAY)pred.set.add(d);}
+  }
+  return{per,cycles,avgLen,avgP,pred,msg,lens};
+}
+function cycleDay(ds,per){
+  let st=null;
+  for(let i=0;i<per.length;i++){if(per[i].start<=ds)st=per[i].start;else break;}
+  return st?diff(ds,st)+1:null;
+}
+
+/* ---------- 记录读写 ---------- */
+function isEmpty(r){
+  return Object.keys(r).every(k=>{
+    if(k==='period')return r.period!==true;
+    const v=r[k];
+    if(Array.isArray(v))return v.length===0;
+    if(typeof v==='string')return v.trim()==='';
+    return v===undefined||v===null||v==='';
+  });
+}
+function mut(fn,keepBody){
+  if(!cur)return;
+  const r=S.records[cur]||(S.records[cur]={period:false});
+  fn(r);
+  if(isEmpty(r))delete S.records[cur];
+  save();
+  if(!keepBody)renderSheet();
+  renderMain();
+}
+
+/* ---------- 主页面 ---------- */
+const ICON={
+  cal:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>',
+  cyc:'<svg viewBox="0 0 24 24"><path d="M4 18l5-6 4 3 7-9"/><path d="M4 21h16"/></svg>',
+  set:'<svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14"/><circle cx="9" cy="7" r="2" fill="#ecebe8"/><circle cx="15" cy="12" r="2" fill="#ecebe8"/><circle cx="8" cy="17" r="2" fill="#ecebe8"/></svg>'
+};
+function renderNav(){
+  $('#nav').innerHTML=[['cal','日历'],['cyc','周期'],['set','设置']].map(x=>
+    `<button data-act="nav" data-v="${x[0]}" class="${view===x[0]?'on':''}">${ICON[x[0]]}<span>${x[1]}</span></button>`).join('');
+}
+function renderMain(){
+  renderNav();
+  const app=$('#app');
+  app.innerHTML = view==='cal'?calHTML():view==='cyc'?cycHTML():setHTML();
+}
+
+function ringHTML(a,cd){
+  const total=a.avgLen?Math.round(a.avgLen):28;
+  const R=46,C=2*Math.PI*R;
+  const c=cd||0;
+  const pinkD=Math.min(c,a.avgP);
+  const pinkLen=Math.min(1,pinkD/total)*C;
+  const yellowLen=Math.max(0,Math.min(1,c/total)*C-pinkLen);
+  return `<div class="ring"><svg viewBox="0 0 108 108" aria-hidden="true">
+    <circle cx="54" cy="54" r="${R}" fill="none" stroke="#e2e0dc" stroke-width="9"/>
+    ${c?`<circle cx="54" cy="54" r="${R}" fill="none" stroke="#eeb5b0" stroke-width="9" stroke-linecap="round" stroke-dasharray="${pinkLen} ${C}"/>`:''}
+    ${yellowLen>1?`<circle cx="54" cy="54" r="${R}" fill="none" stroke="#f3c445" stroke-width="9" stroke-linecap="round" stroke-dasharray="${yellowLen} ${C}" stroke-dashoffset="${-pinkLen}"/>`:''}
+  </svg><div class="in"><div><div class="n">${cd||'-'}</div><div class="u">周期第几天</div></div></div></div>`;
+}
+
+function calHTML(){
+  const a=analyze();
+  const cd=cycleDay(TODAY,a.per);
+  const lastStart=a.per.length?a.per[a.per.length-1].start:null;
+  const todayRec=S.records[TODAY];
+  let predTxt='';
+  if(a.pred){
+    if(TODAY>a.pred.to){predTxt=`<div class="k">下次经期</div><div class="v">已超过预计范围 ${diff(TODAY,a.pred.to)} 天</div>`;}
+    else predTxt=`<div class="k">下次经期预计</div><div class="v">${fmt(a.pred.from)} 至 ${fmt(a.pred.to)}</div>`;
+  }else predTxt=`<div class="k">下次经期</div><div class="v" style="font-size:15px">${esc(a.msg)}</div>`;
+  const chips=(todayRec&&todayRec.period===true?'<span class="chip">经期中</span> ':'')+(lastStart?`<span class="chip y">上次开始 ${fmt(lastStart)}</span>`:'');
+  const first=new Date(vy,vm,1), off=(first.getDay()+6)%7, n=new Date(vy,vm+1,0).getDate();
+  let cells='';
+  for(let i=0;i<off;i++)cells+='<div></div>';
+  for(let d=1;d<=n;d++){
+    const ds=vy+'-'+pad(vm+1)+'-'+pad(d);
+    const r=S.records[ds];
+    const isP=r&&r.period===true;
+    const pr=a.pred&&a.pred.set.has(ds)&&!r;
+    cells+=`<button class="day ${isP?'per':''} ${pr?'pred':''} ${ds===TODAY?'today':''} ${ds===cur?'sel':''}" data-act="openDay" data-date="${ds}" aria-label="${vm+1}月${d}日"><span>${d}</span>${r?'<i class="dot"></i>':''}</button>`;
+  }
+  let banner='';
+  const nrec=Object.keys(S.records).length;
+  if(nrec>0){
+    const le=S.meta.lastExport;
+    const since=le?diff(TODAY,le):null;
+    const hidden=S.meta.bannerHidden===TODAY;
+    if(!hidden&&(since===null||since>=30||(new Date().getDate()===1&&since>0))){
+      banner=`<div class="banner"><span>${since===null?'还没有导出过数据，建议先备份一次':'上次导出是 '+since+' 天前，该备份了'}</span><span><button data-act="nav" data-v="set">去导出</button><button data-act="hideBanner" aria-label="今天不再提示">×</button></span></div>`;
+    }
+  }
+  return `<div class="top"><div><div class="yr">${vy}</div><div class="mo">${vm+1}<small>月</small></div></div>
+    <div class="arrows"><button class="round" data-act="month" data-v="-1" aria-label="上个月"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="round" data-act="month" data-v="1" aria-label="下个月"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></div></div>
+    <div class="card status">${ringHTML(a,cd)}<div class="stx">${predTxt}<div>${chips}</div></div></div>
+    ${banner}
+    <div class="card"><div class="week">${['一','二','三','四','五','六','日'].map(x=>`<div>${x}</div>`).join('')}</div><div class="grid">${cells}</div></div>
+    <div class="legend"><span><i style="background:#f1c3be"></i>经期</span><span><i style="outline:1.5px dashed #e0a12f;outline-offset:-2px;background:#f8edc8"></i>预测</span><span><i style="background:#e0a12f;border-radius:50%;width:7px;height:7px;vertical-align:1px"></i>有记录</span></div>
+    <button class="btn" data-act="openDay" data-date="${TODAY}">记录今天</button>`;
+}
+
+/* ---------- 当天记录页 ---------- */
+function optsFor(f,r){
+  const list=S.settings.opts[f].slice();
+  const v=r[f];
+  (Array.isArray(v)?v:(v?[v]:[])).forEach(x=>{if(list.indexOf(x)<0)list.push(x);});
+  return list;
+}
+function lvlRow(f,r,pre){
+  const L=LEVELS[f];
+  return `<div class="row"><div class="lab">${L.label}</div><div class="opts">${L.opts.map((o,i)=>`<button class="pill ${pre?'pre':''} ${r[f]===i+L.base?'on':''}" data-act="lvl" data-f="${f}" data-v="${i+L.base}">${o}</button>`).join('')}</div></div>`;
+}
+function optRow(f,r,multi){
+  const cur_=r[f];
+  const on=x=>multi?(cur_||[]).indexOf(x)>=0:cur_===x;
+  return `<div class="row"><div class="lab">${LISTS[f]}</div><div class="opts">${optsFor(f,r).map(x=>`<button class="pill ${on(x)?'on':''}" data-act="${multi?'multi':'opt'}" data-f="${f}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}<button class="pill add" data-act="addOpt" data-f="${f}" aria-label="新增${LISTS[f]}">＋</button></div></div>`;
+}
+function sheetHTML(){
+  const ds=cur, r=S.records[ds]||{}, isP=r.period===true;
+  const d=parse(ds);
+  const cd=cycleDay(ds,periods());
+  const sub=cd&&cd<=90?`周期第 ${cd} 天`:'';
+  return `<div class="shhead"><button class="round" data-act="closeDay" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div><div class="t">${d.getMonth()+1}月${d.getDate()}日 周${WK[d.getDay()]}</div><div class="s">${d.getFullYear()}${sub?' · '+sub:''}</div></div></div>
+    <div class="seg"><button class="${isP?'on pp':''}" data-act="per" data-v="1">经期</button><button class="${!isP?'on np':''}" data-act="per" data-v="0">非经期</button></div>
+    ${isP?`<section class="card sec pk"><h3>经期</h3>${lvlRow('flow',r)}${lvlRow('pain',r)}</section>`:''}
+    <section class="card sec"><h3>分泌物</h3>${lvlRow('dq',r)}${optRow('texture',r,false)}${optRow('color',r,false)}</section>
+    <section class="card sec"><h3>感受</h3>${optRow('mood',r,true)}${lvlRow('energy',r)}${lvlRow('sleep',r)}${lvlRow('appetite',r)}${lvlRow('head',r)}${lvlRow('breast',r,true)}${lvlRow('belly',r,true)}</section>
+    <section class="card sec"><h3>运动</h3>${lvlRow('sport',r)}</section>
+    <section class="card sec"><h3>备注标签</h3>${optRow('tags',r,true)}</section>
+    <section class="card sec"><h3>其他</h3>
+      <div class="row"><div class="lab">基础体温</div><div class="opts" style="align-items:center"><input class="field" id="temp" type="number" step="0.01" min="34" max="42" inputmode="decimal" placeholder="例如 36.50" value="${r.temp!==undefined?r.temp:''}" style="width:150px"><span class="hint">℃ 起床前测</span></div></div>
+      <div class="row"><div class="lab">总体状态</div><div class="opts">${[1,2,3,4,5].map(i=>`<button class="pill num ${r.overall===i?'on':''}" data-act="overall" data-v="${i}">${i}</button>`).join('')}</div></div>
+    </section>
+    <section class="card sec"><h3>自由描述</h3><textarea class="field" id="note" placeholder="今天的身体和心情，想写什么都可以">${esc(r.note||'')}</textarea></section>
+    <div class="saved" id="savedTip">${storeOK?'修改会自动保存':'当前无法保存到存储，请及时导出'}</div>
+    ${S.records[ds]?`<div style="text-align:center;margin-top:8px"><button class="link" data-act="clearDay">清空这一天</button></div>`:''}`;
+}
+function renderSheet(){
+  const sh=$('#sheet'), st=sh.scrollTop;
+  $('#sheetBody').innerHTML=sheetHTML();
+  sh.scrollTop=st;
+}
+
+/* ---------- 周期页 ---------- */
+const METRICS=[['breast','胸胀'],['belly','小腹胀'],['pain','痛经'],['head','头痛'],['energy','精力'],['dq','分泌物量'],['overall','总体状态']];
+function metricVal(r,m){return typeof r[m]==='number'?r[m]:null;}
+function chartHTML(a){
+  if(!a.per.length)return '<div class="empty">记录第一次经期后，这里会出现曲线。</div>';
+  const sums={};
+  Object.keys(S.records).forEach(ds=>{
+    const v=metricVal(S.records[ds],metric);if(v===null)return;
+    const cd=cycleDay(ds,a.per);if(!cd||cd>40)return;
+    (sums[cd]=sums[cd]||[]).push(v);
+  });
+  const xs=Object.keys(sums).map(Number).sort((p,q)=>p-q);
+  if(xs.length<2)return '<div class="empty">这一项记录满 2 天以上，就会出现曲线。</div>';
+  const isOv=metric==='overall';
+  const mn=isOv?1:LEVELS[metric].base, mx=isOv?5:LEVELS[metric].opts.length-1+LEVELS[metric].base;
+  const W=340,H=190,pl=30,pr=10,pt=12,pb=26;
+  const xmax=Math.max(35,xs[xs.length-1]);
+  const X=cd=>pl+(cd-1)/(xmax-1)*(W-pl-pr);
+  const Y=v=>pt+(1-(v-mn)/(mx-mn))*(H-pt-pb);
+  const pts=xs.map(x=>[X(x),Y(mean(sums[x]))]);
+  const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area=line+` L${pts[pts.length-1][0].toFixed(1)} ${H-pb} L${pts[0][0].toFixed(1)} ${H-pb} Z`;
+  const bandW=X(a.avgP+0.5)-X(0.5);
+  let grid='';
+  for(let v=mn;v<=mx;v++){grid+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#dcdad5" stroke-width="1"/><text x="${pl-7}" y="${Y(v)+4}" font-size="10" fill="#766f65" text-anchor="end">${v}</text>`;}
+  let xl='';
+  [1,7,14,21,28,35].filter(x=>x<=xmax).forEach(x=>{xl+=`<text x="${X(x)}" y="${H-8}" font-size="10" fill="#766f65" text-anchor="middle">${x}</text>`;});
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="症状随周期天数变化">
+    <defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5c542" stop-opacity=".55"/><stop offset="1" stop-color="#f5c542" stop-opacity=".04"/></linearGradient></defs>
+    <rect x="${X(0.5)}" y="${pt}" width="${bandW}" height="${H-pt-pb}" rx="6" fill="#f4d3cf" opacity=".65"/>
+    ${grid}${xl}
+    <path d="${area}" fill="url(#ga)"/><path d="${line}" fill="none" stroke="#e0a12f" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#ecebe8" stroke="#e0a12f" stroke-width="1.6"/>`).join('')}
+  </svg><div class="hint" style="margin-top:6px">横轴是周期第几天，粉色区域是平均经期长度。</div>`;
+}
+function tagStats(a){
+  const done=a.cycles.filter(c=>c.len&&c.len>=15&&c.len<=70);
+  if(done.length<2)return '<div class="empty">至少记录 2 个完整周期后，才能比较标签的影响。</div>';
+  const info=done.map(c=>{
+    const set=new Set();
+    Object.keys(S.records).forEach(ds=>{if(ds>=c.start&&ds<addDays(c.start,c.len))(S.records[ds].tags||[]).forEach(t=>set.add(t));});
+    return{len:c.len,set};
+  });
+  const all=new Set();info.forEach(i=>i.set.forEach(t=>all.add(t)));
+  if(!all.size)return '<div class="empty">给日子加上备注标签后，这里会比较有标签和没有标签的周期长度。</div>';
+  const rows=[...all].map(t=>{
+    const w=info.filter(i=>i.set.has(t)).map(i=>i.len), o=info.filter(i=>!i.set.has(t)).map(i=>i.len);
+    return{t,n:w.length,w:mean(w),o:mean(o)};
+  }).sort((p,q)=>q.n-p.n);
+  return `<div class="tr" style="font-size:12px;color:var(--ink2)"><span>标签</span><span>有标签</span><span>没有</span></div>`+rows.map(r=>`<div class="tr"><span>${esc(r.t)} <span class="m">${r.n}个周期</span></span><span>${r.w.toFixed(1)}天</span><span>${r.o===null?'-':r.o.toFixed(1)+'天'}</span></div>`).join('');
+}
+function cycHTML(){
+  const a=analyze();
+  const list=a.cycles.slice().reverse();
+  const maxL=Math.max(35,...a.cycles.map(c=>c.len||0));
+  const tiles=`<div class="stat2"><div class="tile"><div class="n">${a.avgLen?a.avgLen.toFixed(1):'-'}</div><div class="k">平均周期（天）</div></div><div class="tile"><div class="n">${a.cycles.length?a.avgP:'-'}</div><div class="k">平均经期（天）</div></div></div>`;
+  const rows=list.length?list.map(c=>{
+    const total=c.len||Math.max(diff(TODAY,c.start)+1,c.days);
+    const w=Math.min(100,total/maxL*100), pk=Math.min(100,c.days/total*100);
+    return `<div class="cyc"><div class="h"><span>${fmt(c.start)} 开始</span><span>${c.len?c.len+' 天':'进行中'} · 经期 ${c.days} 天</span></div><div class="cbar" style="width:${w}%"><i class="a" style="width:${pk}%"></i><i class="b" style="width:${100-pk}%"></i></div></div>`;
+  }).join(''):'<div class="empty">还没有经期记录。在日历里点某一天，选“经期”就会出现在这里。</div>';
+  return `<div class="top"><div><div class="yr">周期</div><div class="mo" style="font-size:36px">总览</div></div></div>
+    ${tiles}
+    <div class="card"><h2 style="font-size:16px;margin-bottom:12px">每个周期</h2>${rows}</div>
+    <div class="card"><h2 style="font-size:16px;margin-bottom:12px">症状随周期变化</h2><div class="mt">${METRICS.map(m=>`<button class="pill ${metric===m[0]?'on':''}" data-act="metric" data-v="${m[0]}">${m[1]}</button>`).join('')}</div>${chartHTML(a)}</div>
+    <div class="card"><h2 style="font-size:16px;margin-bottom:6px">标签与周期长度</h2>${tagStats(a)}</div>`;
+}
+
+/* ---------- 设置页 ---------- */
+function setHTML(){
+  const le=S.meta.lastExport;
+  const blocks=Object.keys(LISTS).map(k=>`<div class="setrow"><div class="k">${LISTS[k]}</div><div class="chips">${S.settings.opts[k].map(x=>`<span class="chipx">${esc(x)}<button data-act="delOpt" data-f="${k}" data-v="${esc(x)}" aria-label="删除${esc(x)}">×</button></span>`).join('')}</div><div class="inl"><input class="field" id="add-${k}" placeholder="新增${LISTS[k]}"><button class="btn small plain" data-act="setAdd" data-f="${k}">添加</button></div></div>`).join('');
+  return `<div class="top"><div><div class="yr">设置</div><div class="mo" style="font-size:36px">选项与数据</div></div></div>
+    <div class="card"><h2 style="font-size:16px;margin-bottom:14px">自定义选项</h2>${blocks}<div class="hint">删除选项不会影响已经记录过的内容。</div></div>
+    <div class="card"><h2 style="font-size:16px;margin-bottom:14px">导出</h2>
+      <div class="setrow"><div class="k">格式</div><div class="pillrow"><button class="pill ${exportFmt==='csv'?'on':''}" data-act="expFmt" data-v="csv">CSV 备份与分析</button><button class="pill ${exportFmt==='md'?'on':''}" data-act="expFmt" data-v="md">MD 阅读存档</button></div></div>
+      <div class="setrow"><div class="k">范围</div><div class="pillrow">${[['month','本月'],['3m','最近三个月'],['all','全部']].map(x=>`<button class="pill ${exportRange===x[0]?'on':''}" data-act="expRange" data-v="${x[0]}">${x[1]}</button>`).join('')}</div></div>
+      <button class="btn" data-act="doExport">导出数据</button>
+      <div class="hint" style="margin-top:10px">${le?'上次导出：'+fmt(le)+'（'+diff(TODAY,le)+' 天前）':'还没有导出过。'}</div></div>
+    <div class="card"><h2 style="font-size:16px;margin-bottom:8px">导入恢复</h2><p class="hint" style="margin:0 0 12px">只支持本工具导出的 CSV，同一天的记录会被覆盖。</p>
+      <div class="pillrow"><label class="btn small plain" style="cursor:pointer;display:inline-block">选择 CSV 文件<input type="file" id="file" accept=".csv,text/csv,text/plain" style="display:none"></label><button class="btn small plain" data-act="pasteImport">粘贴文本导入</button></div></div>
+    <div class="card"><h2 style="font-size:16px;margin-bottom:8px">数据</h2><p class="hint" style="margin:0 0 12px">${storeOK?'数据保存在这个应用的存储中，换设备或清理数据可能丢失，请定期导出。':'当前无法写入存储，关闭页面后数据会丢失，请立刻导出备份。'} 共 ${Object.keys(S.records).length} 天记录。</p><button class="btn small plain" data-act="wipe">清空全部数据</button></div>`;
+}
+
+/* ---------- 弹窗 ---------- */
+function openModal(html){$('#mbox').innerHTML=html;$('#modal').classList.add('open');}
+function closeModal(){$('#modal').classList.remove('open');askCb=null;}
+function askText(title,cb){
+  askCb=cb;
+  openModal(`<h3>${esc(title)}</h3><input class="field" id="askIn" maxlength="20" placeholder="输入后确定"><div class="acts"><button class="btn plain" data-act="mClose">取消</button><button class="btn" data-act="askOk">确定</button></div>`);
+  setTimeout(()=>{const i=$('#askIn');if(i)i.focus();},50);
+}
+function info(title,msg){openModal(`<h3>${esc(title)}</h3><p>${msg}</p><div class="acts"><button class="btn" data-act="mClose">知道了</button></div>`);}
+
+/* ---------- 导出 ---------- */
+function rangeDates(){
+  const all=Object.keys(S.records).sort();
+  if(exportRange==='all')return all;
+  const now=new Date();
+  const from=exportRange==='month'?ymd(new Date(now.getFullYear(),now.getMonth(),1)):ymd(new Date(now.getFullYear(),now.getMonth()-2,1));
+  return all.filter(d=>d>=from);
+}
+function cell(k,r,ds){
+  if(k==='date')return ds;
+  if(k==='period')return r.period===true?'经期':'非经期';
+  const v=r[k];
+  if(Array.isArray(v))return v.join('|');
+  return v===undefined||v===null?'':String(v);
+}
+function csvQ(s){return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+function buildCSV(){
+  const ds=rangeDates();
+  const rows=[COLS.map(c=>c[1]).join(',')];
+  ds.forEach(d=>rows.push(COLS.map(c=>csvQ(cell(c[0],S.records[d],d))).join(',')));
+  return '\ufeff'+rows.join('\r\n');
+}
+function human(k,r){
+  const v=r[k];
+  if(v===undefined||v===null||v===''||(Array.isArray(v)&&!v.length))return '';
+  if(LEVELS[k])return LEVELS[k].opts[v-LEVELS[k].base]||v;
+  if(Array.isArray(v))return v.join('、');
+  if(k==='temp')return v+'℃';
+  return String(v);
+}
+function buildMD(){
+  const ds=rangeDates();
+  const names={all:'全部',month:'本月','3m':'最近三个月'};
+  const cols=COLS.filter(c=>c[0]!=='date'&&c[0]!=='note');
+  let o=`# 身体记录\n\n导出日期：${TODAY}　范围：${names[exportRange]}　共 ${ds.length} 天\n\n## 汇总表\n\n| 日期 | ${cols.map(c=>c[1]).join(' | ')} |\n|${'---|'.repeat(cols.length+1)}\n`;
+  ds.forEach(d=>{const r=S.records[d];o+=`| ${d} | ${cols.map(c=>{const t=c[0]==='period'?(r.period===true?'经期':'非经期'):human(c[0],r);return t.replace(/\|/g,'/');}).join(' | ')} |\n`;});
+  o+='\n## 每日记录\n';
+  ds.forEach(d=>{
+    const r=S.records[d],dt=parse(d);
+    const parts=cols.map(c=>{const t=c[0]==='period'?(r.period===true?'经期':''):human(c[0],r);return t?c[1]+'：'+t:'';}).filter(Boolean);
+    o+=`\n### ${d} 周${WK[dt.getDay()]}\n\n${r.period===true?'经期；':''}${parts.filter(p=>p.indexOf('经期：')!==0).join('；')||'（无选项记录）'}\n`;
+    if(r.note&&r.note.trim())o+=`\n> ${r.note.trim().replace(/\n/g,'\n> ')}\n`;
+  });
+  return o;
+}
+function doExport(){
+  const isCsv=exportFmt==='csv';
+  const text=isCsv?buildCSV():buildMD();
+  const name=`身体记录_${TODAY}.${isCsv?'csv':'md'}`;
+  window.__exp={text,name,isCsv};
+  openModal(`<h3>导出 ${esc(name)}</h3><p>共 ${rangeDates().length} 天。如果“下载文件”没有反应，用“复制全部”，再粘贴到备忘录或文档里保存。</p><textarea class="field" id="expText" readonly>${esc(text)}</textarea><div class="acts"><button class="btn plain" data-act="expCopy">复制全部</button><button class="btn" data-act="expDl">下载文件</button></div><div style="text-align:center;margin-top:6px"><button class="link" data-act="mClose">关闭</button></div>`);
+}
+function markExported(){S.meta.lastExport=TODAY;save();}
+function download(){
+  const e=window.__exp;if(!e)return;
+  try{
+    const b=new Blob([e.text],{type:e.isCsv?'text/csv;charset=utf-8':'text/markdown;charset=utf-8'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=e.name;document.body.appendChild(a);a.click();a.remove();
+    markExported();
+  }catch(err){info('下载没有成功','请改用“复制全部”。');}
+}
+async function copyAll(){
+  const e=window.__exp;if(!e)return;
+  let ok=false;
+  try{await navigator.clipboard.writeText(e.text.replace(/^\ufeff/,''));ok=true;}catch(err){}
+  if(!ok){const t=$('#expText');if(t){t.focus();t.select();try{ok=document.execCommand('copy');}catch(err){}}}
+  if(ok){markExported();const b=document.querySelector('[data-act="expCopy"]');if(b)b.textContent='已复制';}
+  else{const b=document.querySelector('[data-act="expCopy"]');if(b)b.textContent='请长按文本手动复制';}
+}
+
+/* ---------- 导入 ---------- */
+function parseCSV(t){
+  t=t.replace(/^\ufeff/,'');
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<t.length;i++){
+    const c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+    else if(c==='"')q=true;
+    else if(c===','){row.push(f);f='';}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);f='';if(row.some(x=>x!==''))rows.push(row);row=[];}
+    else f+=c;
+  }
+  if(f!==''||row.length){row.push(f);if(row.some(x=>x!==''))rows.push(row);}
+  return rows;
+}
+function importText(t){
+  const rows=parseCSV(t);
+  if(rows.length<2){info('导入失败','没有读到数据行。请确认是本工具导出的 CSV。');return;}
+  const head=rows[0].map(x=>x.trim());
+  const idx={};COLS.forEach(c=>{idx[c[0]]=head.indexOf(c[1]);});
+  if(idx.date<0){info('导入失败','没有找到“日期”列。请确认是本工具导出的 CSV。');return;}
+  let n=0;
+  rows.slice(1).forEach(row=>{
+    const ds=(row[idx.date]||'').trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(ds))return;
+    const g=k=>idx[k]>=0?(row[idx[k]]||'').trim():'';
+    const r={period:g('period')==='经期'};
+    Object.keys(LEVELS).forEach(k=>{const v=g(k);if(v!==''&&!isNaN(+v))r[k]=+v;});
+    ['texture','color'].forEach(k=>{const v=g(k);if(v){r[k]=v;if(S.settings.opts[k].indexOf(v)<0)S.settings.opts[k].push(v);}});
+    ['mood','tags'].forEach(k=>{const v=g(k);if(v){r[k]=v.split('|').filter(Boolean);r[k].forEach(x=>{if(S.settings.opts[k].indexOf(x)<0)S.settings.opts[k].push(x);});}});
+    if(g('temp')!==''&&!isNaN(+g('temp')))r.temp=+g('temp');
+    if(g('overall')!==''&&!isNaN(+g('overall')))r.overall=+g('overall');
+    if(g('note'))r.note=row[idx.note];
+    if(!isEmpty(r)){S.records[ds]=r;n++;}
+  });
+  save();renderMain();
+  info('导入完成','已导入 '+n+' 天的记录。');
+}
+
+/* ---------- 事件 ---------- */
+const A={
+  nav(t){view=t.dataset.v;renderMain();window.scrollTo(0,0);},
+  month(t){vm+=+t.dataset.v;if(vm<0){vm=11;vy--;}if(vm>11){vm=0;vy++;}renderMain();},
+  openDay(t){cur=t.dataset.date;renderSheet();$('#sheet').scrollTop=0;$('#sheet').classList.add('open');renderMain();},
+  closeDay(){$('#sheet').classList.remove('open');cur=null;renderMain();},
+  per(t){mut(r=>{r.period=t.dataset.v==='1';if(!r.period){delete r.flow;delete r.pain;}});},
+  lvl(t){const f=t.dataset.f,v=+t.dataset.v;mut(r=>{if(r[f]===v)delete r[f];else r[f]=v;});},
+  opt(t){const f=t.dataset.f,v=t.dataset.v;mut(r=>{if(r[f]===v)delete r[f];else r[f]=v;});},
+  multi(t){const f=t.dataset.f,v=t.dataset.v;mut(r=>{const a=r[f]||[];const i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);r[f]=a;});},
+  overall(t){const v=+t.dataset.v;mut(r=>{if(r.overall===v)delete r.overall;else r.overall=v;});},
+  addOpt(t){const f=t.dataset.f;askText('新增'+LISTS[f],v=>{
+    if(S.settings.opts[f].indexOf(v)<0)S.settings.opts[f].push(v);
+    mut(r=>{if(f==='mood'||f==='tags'){const a=r[f]||[];if(a.indexOf(v)<0)a.push(v);r[f]=a;}else r[f]=v;});
+  });},
+  clearDay(){openModal(`<h3>清空这一天？</h3><p>这一天的所有记录会被删除，无法恢复。</p><div class="acts"><button class="btn plain" data-act="mClose">取消</button><button class="btn" data-act="clearOk">清空</button></div>`);},
+  clearOk(){delete S.records[cur];save();closeModal();renderSheet();renderMain();},
+  metric(t){metric=t.dataset.v;renderMain();},
+  delOpt(t){const f=t.dataset.f,v=t.dataset.v;S.settings.opts[f]=S.settings.opts[f].filter(x=>x!==v);save();renderMain();},
+  setAdd(t){const f=t.dataset.f,i=$('#add-'+f),v=i.value.trim();if(!v)return;if(S.settings.opts[f].indexOf(v)<0)S.settings.opts[f].push(v);save();renderMain();},
+  expFmt(t){exportFmt=t.dataset.v;renderMain();},
+  expRange(t){exportRange=t.dataset.v;renderMain();},
+  doExport(){doExport();},
+  expDl(){download();},
+  expCopy(){copyAll();},
+  pasteImport(){openModal(`<h3>粘贴 CSV 文本</h3><textarea class="field" id="impText" placeholder="把导出的 CSV 内容粘贴到这里"></textarea><div class="acts"><button class="btn plain" data-act="mClose">取消</button><button class="btn" data-act="impGo">导入</button></div>`);},
+  impGo(){const v=$('#impText').value;closeModal();importText(v);},
+  wipe(){openModal(`<h3>清空全部数据？</h3><p>所有记录和自定义选项都会被删除。建议先导出备份。</p><div class="acts"><button class="btn plain" data-act="mClose">取消</button><button class="btn" data-act="wipeOk">确认清空</button></div>`);},
+  wipeOk(){S.records={};S.settings={opts:clone(DEF)};S.meta={lastExport:null,bannerHidden:''};save();closeModal();renderMain();},
+  hideBanner(){S.meta.bannerHidden=TODAY;save();renderMain();},
+  mClose(){closeModal();},
+  askOk(){const v=($('#askIn').value||'').trim();const cb=askCb;closeModal();if(v&&cb)cb(v);}
+};
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');
+  if(t&&A[t.dataset.act]){A[t.dataset.act](t,e);return;}
+  if(e.target.id==='modal')closeModal();
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='note')mut(r=>{r.note=e.target.value;},true);
+  if(e.target.id==='temp')mut(r=>{const v=parseFloat(e.target.value);if(isNaN(v))delete r.temp;else r.temp=v;},true);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const id=e.target.id||'';
+  if(id==='askIn')A.askOk();
+  if(id.indexOf('add-')===0)A.setAdd({dataset:{f:id.slice(4)}});
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='file'&&e.target.files[0]){
+    const rd=new FileReader();rd.onload=()=>importText(String(rd.result));rd.readAsText(e.target.files[0]);e.target.value='';
+  }
+});
+
+load().then(()=>renderMain());
+})();
+</script>
+</body>
+</html>
